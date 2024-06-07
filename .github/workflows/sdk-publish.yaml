@@ -13,9 +13,13 @@ on:
         type: string
         default: "5.x"
     secrets:
+      github-app-id:
+        required: true
+      github-app-private-key:
+        required: true
       github_access_token:
         description: A GitHub access token with write access to the repo
-        required: true
+        required: false
       pypi_token:
         description: A PyPi access token for publishing the package to PyPi, include the `pypi-` prefix
         required: false
@@ -92,10 +96,15 @@ jobs:
     steps:
       - name: Tune GitHub-hosted runner network
         uses: smorimoto/tune-github-hosted-runner-network@v1
+      - uses: actions/create-github-app-token@v1
+        id: create-github-app-token
+        with:
+          app-id: ${{ secrets.github-app-id }}
+          private-key: ${{ secrets.github-app-private-key }}
       - id: release
         uses: speakeasy-api/sdk-generation-action@v15
         with:
-          github_access_token: ${{ secrets.github_access_token }}
+          github_access_token: ${{ steps.create-github-app-token.outputs.token }}
           action: "release"
           speakeasy_api_key: ${{ secrets.speakeasy_api_key }}
           speakeasy_server_url: ${{ inputs.speakeasy_server_url }}
@@ -317,7 +326,14 @@ jobs:
     steps:
       - name: Tune GitHub-hosted runner network
         uses: smorimoto/tune-github-hosted-runner-network@v1
+      - uses: actions/create-github-app-token@v1
+        id: create-github-app-token
+        with:
+          app-id: ${{ secrets.github-app-id }}
+          private-key: ${{ secrets.github-app-private-key }}
       - uses: actions/checkout@v3
+        with:
+          token: ${{ steps.create-github-app-token.outputs.token }}
       - name: Setup dotnet
         uses: actions/setup-dotnet@v3
         with:
@@ -328,7 +344,7 @@ jobs:
         uses: speakeasy-api/sdk-generation-action@v15
         if: always()
         with:
-          github_access_token: ${{ secrets.github_access_token }}
+          github_access_token: ${{ steps.create-github-app-token.outputs.token }}
           action: publish-event
           speakeasy_api_key: ${{ secrets.speakeasy_api_key }}
           speakeasy_server_url: ${{ inputs.speakeasy_server_url }}

@@ -41,9 +41,13 @@ on:
         required: false
         type: string
     secrets:
+      github-app-id:
+        required: true
+      github-app-private-key:
+        required: true
       github_access_token:
         description: A GitHub access token with write access to the repo
-        required: true
+        required: false
       pypi_token:
         description: A PyPi access token for publishing the package to PyPi, include the `pypi-` prefix
         required: false
@@ -128,12 +132,17 @@ jobs:
     steps:
       - name: Tune GitHub-hosted runner network
         uses: smorimoto/tune-github-hosted-runner-network@v1
+      - uses: actions/create-github-app-token@v1
+        id: create-github-app-token
+        with:
+          app-id: ${{ secrets.github-app-id }}
+          private-key: ${{ secrets.github-app-private-key }}
       - id: run-workflow
         name: Run Generation Workflow
         uses: speakeasy-api/sdk-generation-action@v15
         with:
           speakeasy_version: ${{ inputs.speakeasy_version }}
-          github_access_token: ${{ secrets.github_access_token }}
+          github_access_token: ${{ steps.create-github-app-token.outputs.token }}
           mode: ${{ inputs.mode }}
           force: ${{ inputs.force }}
           speakeasy_api_key: ${{ secrets.speakeasy_api_key }}
@@ -160,7 +169,7 @@ jobs:
         if: always()
         with:
           speakeasy_version: ${{ inputs.speakeasy_version }}
-          github_access_token: ${{ secrets.github_access_token }}
+          github_access_token: ${{ steps.create-github-app-token.outputs.token }}
           action: log-result
           speakeasy_api_key: ${{ secrets.speakeasy_api_key }}
           speakeasy_server_url: ${{ inputs.speakeasy_server_url }}
