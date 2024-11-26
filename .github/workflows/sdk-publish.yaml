@@ -298,7 +298,7 @@ jobs:
       - name: Publish to Sonatype (legacy)
         run: |-
           pwd
-          ./gradlew publish --no-daemon
+          ./gradlew publish --no-daemon --debug
         if: ${{ needs.release.outputs.use_sonatype_legacy == 'true' }}
         env:
           MAVEN_USERNAME: ${{ secrets.ossrh_username }}
@@ -308,7 +308,7 @@ jobs:
       - name: Publish to Sonatype Central
         run: |-
           pwd
-          ./gradlew build sonatypeCentralUpload --no-daemon
+          ./gradlew build sonatypeCentralUpload --no-daemon --debug
         if: ${{ needs.release.outputs.use_sonatype_legacy != 'true' }}
         env:
           SONATYPE_USERNAME: ${{ secrets.ossrh_username }}
